@@ -74,7 +74,7 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
 
         override fun run() {
             when (call.method) {
-                "scanForScales" -> {
+                "startScan" -> {
                     scanForScales(call, result)
                 }
 
@@ -121,20 +121,22 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
     public fun scanForScales(@NonNull call: MethodCall, @NonNull result: Result) {
         val strInterface: String = call.argument<String>("type") as String
         val response: MutableList<Map<String, String>> = mutableListOf()
+ 
         try {
             val starDeviceManager =
                 StarDeviceManager(
                     applicationContext,
                     StarDeviceManager.InterfaceType.BluetoothLowEnergy
                 )
-
-            starDeviceManager.scanForScales(object : StarDeviceManagerCallback() {
+ 
+            starDeviceManager.scanForScales(
+                object : StarDeviceManagerCallback() {
                 override fun onDiscoverScale(@NonNull connectionInfo: ConnectionInfo) {
                     val item = mutableMapOf<String, String>()
                     item["INTERFACE_TYPE_KEY"] = connectionInfo.interfaceType.name
                     item["DEVICE_NAME_KEY"] = connectionInfo.deviceName
                     item["IDENTIFIER_KEY"] = connectionInfo.identifier
-                    Log.d("ScanForScales", "Discovered Scale: $item")
+                   
                     response.add(item)
                 }
 
