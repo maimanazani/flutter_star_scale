@@ -145,7 +145,7 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
 
         } catch (e: Exception) {
             // result.error("PORT_DISCOVERY_ERROR", e.message, null)
-            result.success("test response")
+            result.success(e.message)
 
         }
     }
