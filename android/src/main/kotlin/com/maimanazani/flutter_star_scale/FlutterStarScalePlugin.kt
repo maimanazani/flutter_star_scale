@@ -125,7 +125,7 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
             val starDeviceManager =
                 StarDeviceManager(
                     applicationContext,
-                    StarDeviceManager.InterfaceType.All
+                    StarDeviceManager.InterfaceType.BluetoothLowEnergy
                 )
 
             starDeviceManager.scanForScales(object : StarDeviceManagerCallback() {
@@ -137,7 +137,6 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
 
                     response.add(item)
                 }
-
 
             })
 
