@@ -41,8 +41,10 @@ class _MyAppState extends State<MyApp> {
     // setState to update our non-existent appearance.
     if (!mounted) return;
 
+    print(platformVersion);
+
     setState(() {
-      _platformVersion = platformVersion;
+      _platformVersion = platformVersion.toString();
     });
   }
 
