@@ -135,8 +135,8 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
                     item["DEVICE_NAME_KEY"] = connectionInfo.deviceName
                     item["IDENTIFIER_KEY"] = connectionInfo.identifier
 
-                    response.add("test response")
-                    result.success(response)
+                    response.add(item)
+                    result.success("test response")
                 }
 
 
