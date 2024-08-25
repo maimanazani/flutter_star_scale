@@ -134,7 +134,7 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
                     item["INTERFACE_TYPE_KEY"] = connectionInfo.interfaceType.name
                     item["DEVICE_NAME_KEY"] = connectionInfo.deviceName
                     item["IDENTIFIER_KEY"] = connectionInfo.identifier
-
+                    Log.d("ScanForScales", "Discovered Scale: $item")
                     response.add(item)
                 }
 
