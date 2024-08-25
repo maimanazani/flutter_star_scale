@@ -136,16 +136,18 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
                     item["IDENTIFIER_KEY"] = connectionInfo.identifier
 
                     response.add(item)
-                    result.success("test response")
                 }
+
 
             })
 
- 
+            Handler(Looper.getMainLooper()).postDelayed({
+                result.success(response)
+            }, 10000)
+
 
         } catch (e: Exception) {
-            // result.error("PORT_DISCOVERY_ERROR", e.message, null)
-            result.success(e.message)
+            result.error("PORT_DISCOVERY_ERROR", e.message, null)
 
         }
     }
