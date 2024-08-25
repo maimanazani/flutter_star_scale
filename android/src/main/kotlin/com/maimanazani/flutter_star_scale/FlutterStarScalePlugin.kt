@@ -125,7 +125,7 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
             val starDeviceManager =
                 StarDeviceManager(
                     applicationContext,
-                    StarDeviceManager.InterfaceType.BluetoothLowEnergy
+                    StarDeviceManager.InterfaceType.All
                 )
 
             starDeviceManager.scanForScales(object : StarDeviceManagerCallback() {
@@ -139,9 +139,9 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
                     result.success("test response")
                 }
 
-
             })
 
+ 
 
         } catch (e: Exception) {
             result.error("PORT_DISCOVERY_ERROR", e.message, null)
