@@ -121,30 +121,34 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
     public fun scanForScales(@NonNull call: MethodCall, @NonNull result: Result) {
         val strInterface: String = call.argument<String>("type") as String
         val response: MutableList<Map<String, String>> = mutableListOf()
- 
+         
+
         try {
+            val interfaceType = when (strInterface) {
+                "bluetooth" -> StarDeviceManager.InterfaceType.BluetoothLowEnergy
+                "usb" -> StarDeviceManager.InterfaceType.USB
+                else -> StarDeviceManager.InterfaceType.All
+            }
+
             val starDeviceManager =
-                StarDeviceManager(
-                    applicationContext,
-                    StarDeviceManager.InterfaceType.BluetoothLowEnergy
-                )
- 
+                StarDeviceManager(applicationContext, interfaceType)
+
+
             starDeviceManager.scanForScales(
                 object : StarDeviceManagerCallback() {
-                override fun onDiscoverScale(@NonNull connectionInfo: ConnectionInfo) {
-                    val item = mutableMapOf<String, String>()
-                    item["INTERFACE_TYPE_KEY"] = connectionInfo.interfaceType.name
-                    item["DEVICE_NAME_KEY"] = connectionInfo.deviceName
-                    item["IDENTIFIER_KEY"] = connectionInfo.identifier
-                   
-                    response.add(item)
-                }
+                    override fun onDiscoverScale(@NonNull connectionInfo: ConnectionInfo) {
+                        val item = mutableMapOf<String, String>()
+                        item["INTERFACE_TYPE_KEY"] = connectionInfo.interfaceType.name
+                        item["DEVICE_NAME_KEY"] = connectionInfo.deviceName
+                        item["IDENTIFIER_KEY"] = connectionInfo.identifier
 
-            })
+                        response.add(item)
+                        result.success(response)
+                    }
 
-            Handler(Looper.getMainLooper()).postDelayed({
-                result.success(response)
-            }, 10000)
+                })
+
+        
 
 
         } catch (e: Exception) {
