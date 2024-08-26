@@ -15,6 +15,9 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+
+import io.flutter.plugin.common.EventChannel
+
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.Registrar
@@ -22,15 +25,23 @@ import java.io.IOException
 import java.nio.charset.Charset
 import java.nio.charset.UnsupportedCharsetException
 import android.webkit.URLUtil
-import com.starmicronics.starmgsio.StarDeviceManager
-import com.starmicronics.starmgsio.StarDeviceManagerCallback
-import com.starmicronics.starmgsio.ConnectionInfo
+import com.starmicronics.starmgsio.ConnectionInfo;
+import com.starmicronics.starmgsio.Scale;
+import com.starmicronics.starmgsio.ScaleCallback;
+import com.starmicronics.starmgsio.ScaleData;
+import com.starmicronics.starmgsio.ScaleOutputConditionSetting;
+import com.starmicronics.starmgsio.ScaleSetting;
+import com.starmicronics.starmgsio.ScaleType;
+import com.starmicronics.starmgsio.StarDeviceManager;
 
 /** FlutterStarScalePlugin */
-class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
+class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.StreamHandler {
+    private var mScale: Scale? = null
+    private var eventSink: EventChannel.EventSink? = null
 
     companion object {
         private const val CHANNEL = "flutter_star_scale"
+        private const val EVENT_CHANNEL = "flutter_star_scale/events"
         private lateinit var applicationContext: Context
 
         @JvmStatic
@@ -46,6 +57,9 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
                 applicationContext = context.applicationContext
                 val channel = MethodChannel(messenger, CHANNEL)
                 channel.setMethodCallHandler(FlutterStarScalePlugin())
+
+                val eventChannel = EventChannel(messenger, EVENT_CHANNEL)
+                eventChannel.setStreamHandler(FlutterStarScalePlugin())
             } catch (e: Exception) {
                 Log.e("FlutterStarScalePlugin", "Registration failed", e)
             }
@@ -65,7 +79,9 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
-        // Cleanup if necessary
+        mScale?.let { scale ->
+            scale.disconnect()
+        }
     }
 
     inner class MethodRunner(call: MethodCall, result: Result) : Runnable {
@@ -78,6 +94,10 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
                     scanForScales(call, result)
                 }
 
+                "readData" -> {
+                    readData(call, result)
+                }
+
                 else -> result.notImplemented()
             }
         }
@@ -86,6 +106,16 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
     override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
         val methodResultWrapper = MethodResultWrapper(result)
         Thread(MethodRunner(call, methodResultWrapper)).start()
+    }
+
+    override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+        eventSink = events
+
+    }
+
+    override fun onCancel(arguments: Any?) {
+        eventSink = null
+
     }
 
     class MethodResultWrapper(methodResult: Result) : Result {
@@ -118,21 +148,60 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
+    public fun readData(@NonNull call: MethodCall, @NonNull result: Result) {
+        val strInterface: String = call.argument<String>("type") as String
+
+        val starDeviceManager = StarDeviceManager(applicationContext);
+
+        val connectionInfo = when (strInterface) {
+            "BluetoothLowEnergy" -> {
+                ConnectionInfo.Builder()
+                    .setBleInfo(strInterface)
+                    .build()
+            }
+
+            "USB" -> {
+                ConnectionInfo.Builder()
+                    .setUsbInfo(strInterface)
+                    .setBaudRate(1200)
+                    .build()
+            }
+
+            else -> {
+                ConnectionInfo.Builder()
+                    .setBleInfo(strInterface)
+                    .build()
+            }
+        }
+
+        mScale = starDeviceManager.createScale(connectionInfo)
+        mScale?.connect(mScaleCallback)
+
+
+    }
+
     public fun scanForScales(@NonNull call: MethodCall, @NonNull result: Result) {
         val strInterface: String = call.argument<String>("type") as String
         val response: MutableList<Map<String, String>> = mutableListOf()
-         
+
 
         try {
             val interfaceType = when (strInterface) {
-                "bluetooth" -> StarDeviceManager.InterfaceType.BluetoothLowEnergy
-                "usb" -> StarDeviceManager.InterfaceType.USB
+                "BluetoothLowEnergy" -> StarDeviceManager.InterfaceType.BluetoothLowEnergy
+                "USB" -> StarDeviceManager.InterfaceType.USB
                 else -> StarDeviceManager.InterfaceType.All
             }
+            // val item = mutableMapOf<String, String>()
+            // item["INTERFACE_TYPE_KEY"] = "BLE"
+            // item["DEVICE_NAME_KEY"] = "Scale-4502-a12"
+            // item["IDENTIFIER_KEY"] = "62:00:A1:27:99:FC"
+            // item["SCALE_TYPE_KEY"] = "MGTS"
+
+            // response.add(item)
+            // result.success(response)
 
             val starDeviceManager =
                 StarDeviceManager(applicationContext, interfaceType)
-
 
             starDeviceManager.scanForScales(
                 object : StarDeviceManagerCallback() {
@@ -141,19 +210,91 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler {
                         item["INTERFACE_TYPE_KEY"] = connectionInfo.interfaceType.name
                         item["DEVICE_NAME_KEY"] = connectionInfo.deviceName
                         item["IDENTIFIER_KEY"] = connectionInfo.identifier
-
+                        item["SCALE_TYPE_KEY"] = connectionInfo.getScaleType().name()
                         response.add(item)
                         result.success(response)
                     }
-
                 })
-
-        
-
 
         } catch (e: Exception) {
             result.error("PORT_DISCOVERY_ERROR", e.message, null)
 
+        }
+    }
+
+    private val mScaleCallback = object : ScaleCallback() {
+        override fun onConnect(scale: Scale, status: Int) {
+            var connectSuccess = false
+
+            when (status) {
+                Scale.CONNECT_SUCCESS -> {
+                    connectSuccess = true
+                    // result.success("Connect success.")
+                }
+
+                Scale.CONNECT_NOT_AVAILABLE -> {
+                    //result.success("Failed to connect. (Not available)")
+                }
+
+                Scale.CONNECT_ALREADY_CONNECTED -> {
+                    // result.success("Failed to connect. (Already connected)")
+                }
+
+                Scale.CONNECT_TIMEOUT -> {
+                    // result.success("Failed to connect. (Timeout)")
+                }
+
+                Scale.CONNECT_READ_WRITE_ERROR -> {
+                    //  result.success("Failed to connect. (Read Write error)")
+                }
+
+                Scale.CONNECT_NOT_SUPPORTED -> {
+                    //result.success("Failed to connect. (Not supported device)")
+                }
+
+                Scale.CONNECT_NOT_GRANTED_PERMISSION -> {
+                    //result.success("Failed to connect. (Not granted permission)")
+                }
+
+                else -> {
+                    //result.success("Failed to connect. (Unexpected error)")
+                }
+            }
+
+            if (!connectSuccess) {
+                mScale = null
+
+            }
+        }
+
+        override fun onDisconnect(scale: Scale, status: Int) {
+            mScale = null
+
+            when (status) {
+                Scale.DISCONNECT_SUCCESS -> {
+                    //result.success("Disconnect success.")
+                }
+
+                Scale.DISCONNECT_NOT_CONNECTED -> {
+                    // result.success("Failed to disconnect. (Not connected)")
+                }
+
+                Scale.DISCONNECT_TIMEOUT -> {
+                    // result.success("Failed to disconnect. (Timeout)")
+                }
+
+                Scale.DISCONNECT_READ_WRITE_ERROR -> {
+                    //result.success("Failed to disconnect. (Read Write error)")
+                }
+
+                Scale.DISCONNECT_UNEXPECTED_ERROR -> {
+                    // result.success("Failed to disconnect. (Unexpected error)")
+                }
+
+                else -> {
+                    // result.success("Unexpected disconnection.")
+                }
+            }
         }
     }
 

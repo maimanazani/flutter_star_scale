@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_star_scale/flutter_star_scale.dart';
+import 'package:flutter_star_scale_example/scale_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,49 +16,56 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
+  List<ConnectionInfo> scales = [];
 
   @override
   void initState() {
     super.initState();
-    initPlatformState();
+    scanScales();
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    dynamic platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
+  Future<void> scanScales() async {
     try {
-      platformVersion =
+      List<ConnectionInfo> results =
           await StarScale.scanForScales(StarInterfaceType.BluetoothLowEnergy);
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
+      setState(() {
+        scales = results;
+      });
+    } catch (e) {
+      debugPrint(e.toString());
     }
+  }
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    print(platformVersion);
-
-    setState(() {
-      _platformVersion = platformVersion.toString();
-    });
+  void handleTap(BuildContext context, ConnectionInfo info) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ScalePage(connectionInfo: info)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin example app'),
-        ),
-        body: Center(
-          child: Text('Running on: $_platformVersion\n'),
-        ),
-      ),
+          appBar: AppBar(
+            title: const Text('Scale Example App'),
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ListView.builder(
+              itemCount: scales.length,
+              itemBuilder: (BuildContext context, int index) {
+                ConnectionInfo scale = scales[index];
+                return ListTile(
+                  onTap: () => handleTap(context, scale),
+                  title: Text(
+                      "${scale.scaleTypeKey} - ${scale.interfaceTypeKey} - ${scale.deviceNameKey}"),
+                  subtitle: Text("${scale.identifierKey}"),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                );
+              },
+            ),
+          )),
     );
   }
 }
