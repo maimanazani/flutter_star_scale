@@ -15,7 +15,7 @@ class StarScale {
 
   StarScale() {
     _stream = _streamController.stream.map((params) {
-      return _eventChannel.receiveBroadcastStream(params).first;
+      return _eventChannel.receiveBroadcastStream(params).last;
     });
   }
 
