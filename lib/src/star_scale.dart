@@ -25,6 +25,7 @@ class StarScale {
       StarInterfaceType interfaceType) async {
     dynamic result =
         await _channel.invokeMethod('startScan', {'type': interfaceType.text});
+
     if (result is List) {
       return result.map<ConnectionInfo>((connectionInfo) {
         return ConnectionInfo(connectionInfo);
