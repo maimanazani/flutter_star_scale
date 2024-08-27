@@ -14,13 +14,29 @@ class ScalePage extends StatefulWidget {
 class _ScalePageState extends State<ScalePage> {
   final plugin = StarScale();
   StreamSubscription<dynamic>? _subscription;
+  String connectionText = "";
+  ScaleData data = ScaleData({});
 
   @override
   void initState() {
+    readScale();
     super.initState();
+  }
+
+  void readScale() {
+    setState(() {
+      connectionText = "Connecting to scale...";
+    });
     _subscription =
         plugin.scaleDataStream(widget.connectionInfo).listen((event) {
       print("Received data: $event");
+      setState(() {
+        data = ScaleData(event);
+        if (data.status == ScaleStatus.connect_failed) {
+          connectionText = "${data.msg}";
+          _subscription?.cancel();
+        }
+      });
     });
   }
 
@@ -30,8 +46,45 @@ class _ScalePageState extends State<ScalePage> {
       appBar: AppBar(
         title: const Text('Scale Example App'),
       ),
-      body: const Center(
-        child: Text('Listening for scale data...'),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              connectionText,
+              style: TextStyle(
+                fontSize: 18,
+                color: data.status == ScaleStatus.connect_success
+                    ? Colors.green
+                    : Colors.red,
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                if (data.status == ScaleStatus.connect_success) {
+                  await plugin.disconnect();
+                } else if (data.status == ScaleStatus.disconnect_success) {
+                  readScale();
+                }
+              },
+              style: ButtonStyle(
+                shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                    side: const BorderSide(color: Colors.black), // Border color
+                  ),
+                ),
+              ),
+              child: Text(
+                  style: const TextStyle(
+                    color: Colors.black,
+                  ),
+                  data.status == ScaleStatus.connect_success
+                      ? "Disconnect"
+                      : "Connect"),
+            )
+          ],
+        ),
       ),
     );
   }

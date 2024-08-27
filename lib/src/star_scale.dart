@@ -19,6 +19,10 @@ class StarScale {
     }
   }
 
+  Future disconnect() async {
+    await _channel.invokeMethod('disconnect');
+  }
+
   Stream<dynamic> scaleDataStream(ConnectionInfo info) {
     return _eventChannel.receiveBroadcastStream(info.toMap());
   }

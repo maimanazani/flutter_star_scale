@@ -36,16 +36,13 @@ import com.starmicronics.starmgsio.StarDeviceManager;
 import com.starmicronics.starmgsio.StarDeviceManagerCallback;
 
 
-
 /** FlutterStarScalePlugin */
 class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.StreamHandler {
     private var mScale: Scale? = null
     private var eventSink: EventChannel.EventSink? = null
 
     private val data: MutableMap<String, Any> = mutableMapOf(
-        "status" to "online",
-        "date" to System.currentTimeMillis(), // Initial date
-        "unit" to "default_unit",
+        "status" to "",
         "msg" to ""
     )
 
@@ -105,6 +102,10 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
             when (call.method) {
                 "startScan" -> {
                     scanForScales(call, result)
+                }
+
+                "disconnect" -> {
+                    disconnectScale(call, result)
                 }
 
                 else -> result.notImplemented()
@@ -245,6 +246,15 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
         }
     }
 
+    private fun disconnectScale(call: MethodCall, result: Result) {
+        if (eventSink != null && mScale != null) {
+            mScale?.let { scale ->
+                scale.disconnect()
+            }
+            eventSink = null
+        }
+    }
+
     private val mScaleCallback = object : ScaleCallback() {
         override fun onConnect(scale: Scale, status: Int) {
             var connectSuccess = false
@@ -253,34 +263,43 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
                 Scale.CONNECT_SUCCESS -> {
                     connectSuccess = true
                     data["msg"] = "Connect success."
+                    data["status"] = "connect_success"
+
                 }
 
                 Scale.CONNECT_NOT_AVAILABLE -> {
                     data["msg"] = "Failed to connect. (Not available)"
+                    data["status"] = "connect_failed"
                 }
 
                 Scale.CONNECT_ALREADY_CONNECTED -> {
                     data["msg"] = "Failed to connect. (Already connected)"
+                    data["status"] = "connect_failed"
                 }
 
                 Scale.CONNECT_TIMEOUT -> {
                     data["msg"] = "Failed to connect. (Timeout)"
+                    data["status"] = "connect_failed"
                 }
 
                 Scale.CONNECT_READ_WRITE_ERROR -> {
                     data["msg"] = "Failed to connect. (Read Write error)"
+                    data["status"] = "connect_failed"
                 }
 
                 Scale.CONNECT_NOT_SUPPORTED -> {
                     data["msg"] = "Failed to connect. (Not supported device)"
+                    data["status"] = "connect_failed"
                 }
 
                 Scale.CONNECT_NOT_GRANTED_PERMISSION -> {
                     data["msg"] = "Failed to connect. (Not granted permission)"
+                    data["status"] = "connect_failed"
                 }
 
                 else -> {
                     data["msg"] = "Failed to connect. (Unexpected error)"
+                    data["status"] = "connect_failed"
 
                 }
             }
@@ -296,27 +315,33 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
 
             when (status) {
                 Scale.DISCONNECT_SUCCESS -> {
-                    //result.success("Disconnect success.")
+                    data["msg"] = "Disconnect success."
+                    data["status"] = "disconnect_success"
                 }
 
                 Scale.DISCONNECT_NOT_CONNECTED -> {
-                    // result.success("Failed to disconnect. (Not connected)")
+                    data["msg"] = "Failed to disconnect. (Not connected)"
+                    data["status"] = "disconnect_failed"
                 }
 
                 Scale.DISCONNECT_TIMEOUT -> {
-                    // result.success("Failed to disconnect. (Timeout)")
+                    data["msg"] = "Failed to disconnect. (Timeout)"
+                    data["status"] = "disconnect_failed"
                 }
 
                 Scale.DISCONNECT_READ_WRITE_ERROR -> {
-                    //result.success("Failed to disconnect. (Read Write error)")
+                    data["msg"] = "Failed to disconnect. (Read Write error)"
+                    data["status"] = "disconnect_failed"
                 }
 
                 Scale.DISCONNECT_UNEXPECTED_ERROR -> {
-                    // result.success("Failed to disconnect. (Unexpected error)")
+                    data["msg"] = "Failed to disconnect. (Unexpected error)"
+                    data["status"] = "disconnect_failed"
                 }
 
                 else -> {
-                    // result.success("Unexpected disconnection.")
+                    data["msg"] = "Unexpected disconnection."
+                    data["status"] = "disconnect_success"
                 }
             }
         }
