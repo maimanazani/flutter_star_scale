@@ -9,6 +9,7 @@ class ScaleData {
   ScaleStatus? status;
   String? msg;
   double? weight;
+  String? unit;
 
   ScaleData(dynamic data) {
     if (data.containsKey('status')) {
@@ -20,6 +21,9 @@ class ScaleData {
     }
     if (data.containsKey('weight')) {
       weight = data['weight'];
+    }
+    if (data.containsKey('unit')) {
+      unit = data['unit'];
     }
   }
 

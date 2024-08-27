@@ -17,6 +17,8 @@ class _ScalePageState extends State<ScalePage> {
   String connectionText = "";
   final starScale = StarScale();
   ScaleData data = ScaleData({});
+  double weight = 0.00;
+  String unit = "kg";
 
   @override
   void initState() {
@@ -38,6 +40,8 @@ class _ScalePageState extends State<ScalePage> {
           }
           if (data.status == ScaleStatus.connect_success) {
             connectionText = "${data.msg}";
+            weight = data.weight ?? 0;
+            unit = "${data.unit}";
           }
         });
       },
@@ -112,7 +116,33 @@ class _ScalePageState extends State<ScalePage> {
                     data.status == ScaleStatus.connect_success
                         ? "Disconnect"
                         : "Connect"),
-              )
+              ),
+            if (data.status == ScaleStatus.connect_success)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic, // Add this line
+                children: [
+                  Text(
+                    weight.toString(),
+                    style: const TextStyle(
+                      fontSize: 50,
+                    ),
+                  ),
+                  Text(
+                    data.unit ?? "",
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
+                  ),
+                ],
+              ),
+            if (data.status == ScaleStatus.connect_success)
+              TextButton(
+                  onPressed: () {
+                    starScale.tare();
+                  },
+                  child: Text("Tare"))
           ],
         ),
       ),

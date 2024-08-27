@@ -19,13 +19,14 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-
 import com.starmicronics.starmgsio.ConnectionInfo;
 import com.starmicronics.starmgsio.Scale;
 import com.starmicronics.starmgsio.ScaleCallback;
 import com.starmicronics.starmgsio.ScaleData;
+import com.starmicronics.starmgsio.ScaleOutputConditionSetting;
+import com.starmicronics.starmgsio.ScaleSetting;
+import com.starmicronics.starmgsio.ScaleType;
 import com.starmicronics.starmgsio.StarDeviceManager;
-import com.starmicronics.starmgsio.StarDeviceManagerCallback;
 
 public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler, EventChannel.StreamHandler {
     private Scale mScale = null;
@@ -34,6 +35,7 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
     private final Map<String, Object> data = new HashMap<String, Object>() {{
         put("status", "");
         put("msg", "");
+        put("unit", "lbs");
         put("weight", 0.00);
 
     }};
@@ -41,7 +43,7 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
     private static final String CHANNEL = "flutter_star_scale";
     private static final String EVENT_CHANNEL = "flutter_star_scale/events";
     private static Context applicationContext;
- 
+
 
     public static void setupPlugin(BinaryMessenger messenger, Context context) {
         try {
@@ -191,9 +193,13 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
                 }
 
             } else if ("disconnect".equals(action)) {
-                if(mScale != null){
+                if (mScale != null) {
                     mScale.disconnect();
-                } 
+                }
+            } else if ("tare".equals(action)) {
+                if (mScale != null) {
+                    mScale.updateSetting(ScaleSetting.ZeroPointAdjustment);
+                }
             }
         }
     }
@@ -211,30 +217,30 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
             } else {
                 interfaceType = StarDeviceManager.InterfaceType.All;
             }
-            //List<Map<String, String>> responseList = new ArrayList<>();
+            List<Map<String, String>> responseList = new ArrayList<>();
 
-            // Map<String, String> item = new HashMap<>();
-            // item.put("INTERFACE_TYPE_KEY" , "BLE");
-            // item.put("DEVICE_NAME_KEY","Scale-4502-a12");
-            // item.put("IDENTIFIER_KEY","62:00:A1:27:99:FC");
-            // item.put("SCALE_TYPE_KEY","MGTS");
-            // responseList.add(item); 
-            // result.success(responseList);
-            StarDeviceManager starDeviceManager = new StarDeviceManager(applicationContext, interfaceType);
+            Map<String, String> item = new HashMap<>();
+            item.put("INTERFACE_TYPE_KEY" , "BLE");
+            item.put("DEVICE_NAME_KEY","Scale-4502-a12");
+            item.put("IDENTIFIER_KEY","62:00:A1:27:99:FC");
+            item.put("SCALE_TYPE_KEY","MGTS");
+            responseList.add(item); 
+            result.success(responseList);
+            // StarDeviceManager starDeviceManager = new StarDeviceManager(applicationContext, interfaceType);
 
-            starDeviceManager.scanForScales(new StarDeviceManagerCallback() {
-                @Override
-                public void onDiscoverScale(@NonNull ConnectionInfo connectionInfo) {
-                 List<Map<String, String>> responseList = new ArrayList<>();
-                    Map<String, String> item = new HashMap<>();
-                    item.put("INTERFACE_TYPE_KEY", connectionInfo.getInterfaceType().name());
-                    item.put("DEVICE_NAME_KEY", connectionInfo.getDeviceName());
-                    item.put("IDENTIFIER_KEY", connectionInfo.getIdentifier());
-                    item.put("SCALE_TYPE_KEY", connectionInfo.getScaleType().name());
-                    responseList.add(item); 
-                    result.success(responseList);
-                }
-            });
+            // starDeviceManager.scanForScales(new StarDeviceManagerCallback() {
+            //     @Override
+            //     public void onDiscoverScale(@NonNull ConnectionInfo connectionInfo) {
+            //         List<Map<String, String>> responseList = new ArrayList<>();
+            //         Map<String, String> item = new HashMap<>();
+            //         item.put("INTERFACE_TYPE_KEY", connectionInfo.getInterfaceType().name());
+            //         item.put("DEVICE_NAME_KEY", connectionInfo.getDeviceName());
+            //         item.put("IDENTIFIER_KEY", connectionInfo.getIdentifier());
+            //         item.put("SCALE_TYPE_KEY", connectionInfo.getScaleType().name());
+            //         responseList.add(item);
+            //         result.success(responseList);
+            //     }
+            // });
 
         } catch (Exception e) {
             result.error("PORT_DISCOVERY_ERROR", e.getMessage(), null);
@@ -340,12 +346,31 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
 
         @Override
         public void onReadScaleData(Scale scale, ScaleData scaleData) {
-         
-            if (mScale!=null && eventSink != null) {
-                data.put("weight",scaleData.getWeight() );
 
-                eventSink.success(data);
+            if (mScale != null && eventSink != null) {
+                Double prev = (Double) data.get("weight");
+
+                double cur = scaleData.getWeight();
+                String unit = scaleData.getUnit().toString();
+
+                if (prev == null || prev != cur) {
+                    data.put("weight", cur);
+                    data.put("unit", unit);
+
+
+                    if (eventSink != null) {
+                        eventSink.success(data);
+                    }
+                }
+
             }
         }
+
+        @Override
+        public void onUpdateSetting(Scale scale, ScaleSetting scaleSetting, int status) {
+            if (scaleSetting == ScaleSetting.ZeroPointAdjustment) {
+            }
+        }
+
     };
 }

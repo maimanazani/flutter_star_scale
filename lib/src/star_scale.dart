@@ -43,6 +43,10 @@ class StarScale {
     _streamController.add({"ACTION": "disconnect"});
   }
 
+  void tare() {
+    _streamController.add({"ACTION": "tare"});
+  }
+
   void dispose() {
     _subscription?.cancel();
     _streamController.close();
