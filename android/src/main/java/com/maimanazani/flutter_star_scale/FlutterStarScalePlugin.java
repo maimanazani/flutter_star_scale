@@ -331,8 +331,9 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
                     data.put("status", "disconnect_success");
                     break;
             }
-
-            eventSink.success(data);
+            if (eventSink != null) {
+                eventSink.success(data);
+            }
         }
 
         @Override
