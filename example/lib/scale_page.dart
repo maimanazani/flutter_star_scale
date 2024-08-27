@@ -15,6 +15,7 @@ class _ScalePageState extends State<ScalePage> {
   final plugin = StarScale();
   StreamSubscription<dynamic>? _subscription;
   String connectionText = "";
+  final starScale = StarScale();
   ScaleData data = ScaleData({});
 
   @override
@@ -27,20 +28,40 @@ class _ScalePageState extends State<ScalePage> {
     setState(() {
       connectionText = "Connecting to scale...";
     });
-    _subscription =
-        plugin.scaleDataStream(widget.connectionInfo).listen((event) {
-      print("Received data: $event");
-      setState(() {
-        data = ScaleData(event);
-        if (data.status == ScaleStatus.connect_failed) {
-          connectionText = "${data.msg}";
-          _subscription?.cancel();
-        }
-        if (data.status == ScaleStatus.connect_success) {
-          connectionText = "${data.msg}";
-        }
-      });
-    });
+    starScale.scaleDataStream?.listen(
+      (event) {
+        print("Received data: $event");
+        setState(() {
+          data = ScaleData(event);
+          if (data.status == ScaleStatus.connect_failed) {
+            connectionText = "${data.msg}";
+          }
+          if (data.status == ScaleStatus.connect_success) {
+            connectionText = "${data.msg}";
+          }
+        });
+      },
+      onError: (error) {
+        print("Error: $error");
+      },
+      onDone: () {
+        print("Stream closed");
+      },
+    );
+    starScale.connect(widget.connectionInfo);
+    // plugin.listenToScaleData(
+    //   widget.connectionInfo,
+    //   (event) {
+    //     print("Received data: $event");
+
+    //   },
+    //   onError: (error) {
+    //     print("Error receiving event: $error");
+    //   },
+    //   onDone: () {
+    //     print("Stream done");
+    //   },
+    // );
   }
 
   @override
@@ -67,12 +88,12 @@ class _ScalePageState extends State<ScalePage> {
                 data.status == ScaleStatus.disconnect_success ||
                 data.status == ScaleStatus.disconnect_failed)
               TextButton(
-                onPressed: () async {
+                onPressed: () {
                   if (data.status == ScaleStatus.connect_success) {
-                    await plugin.disconnect();
+                    starScale.disconnect();
                   } else if (data.status == ScaleStatus.disconnect_success ||
                       data.status == ScaleStatus.connect_failed) {
-                    readScale();
+                    starScale.connect(widget.connectionInfo);
                   }
                 },
                 style: ButtonStyle(

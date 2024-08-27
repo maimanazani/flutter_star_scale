@@ -104,9 +104,6 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
                     scanForScales(call, result)
                 }
 
-                "disconnect" -> {
-                    disconnectScale(call, result)
-                }
 
                 else -> result.notImplemented()
             }
@@ -162,45 +159,49 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
         val params = arguments as? Map<*, *>
         val interfaceType = params?.get("INTERFACE_TYPE_KEY") as? String
         val macAddress = params?.get("IDENTIFIER_KEY") as? String
+        val action = params?.get("ACTION") as? String
 
-        // val handler = Handler(Looper.getMainLooper())
-        // handler.postDelayed(object : Runnable {
-        //     override fun run() {
-        //         data["date"] = System.currentTimeMillis()
+        when (action) {
+            "connect" -> {
+                if (macAddress != null && mScale == null) {
+                    val starDeviceManager = StarDeviceManager(applicationContext);
 
-        //         // Send the map to the Flutter side
-        //         eventSink?.success(data)
-        //         handler.postDelayed(this, 1000) // Send data every second
-        //     }
-        // }, 1000)
+                    val connectionInfo = when (interfaceType) {
+                        "BluetoothLowEnergy" -> {
+                            ConnectionInfo.Builder()
+                                .setBleInfo(macAddress)
+                                .build()
+                        }
 
-        if (mScale == null) {
-            val starDeviceManager = StarDeviceManager(applicationContext);
+                        "USB" -> {
+                            ConnectionInfo.Builder()
+                                .setUsbInfo(macAddress)
+                                .setBaudRate(1200)
+                                .build()
+                        }
 
-            val connectionInfo = when (interfaceType) {
-                "BluetoothLowEnergy" -> {
-                    ConnectionInfo.Builder()
-                        .setBleInfo(macAddress)
-                        .build()
+                        else -> {
+                            ConnectionInfo.Builder()
+                                .setBleInfo(macAddress)
+                                .build()
+                        }
+                    }
+
+                    mScale = starDeviceManager.createScale(connectionInfo)
+                    mScale?.connect(mScaleCallback)
                 }
 
-                "USB" -> {
-                    ConnectionInfo.Builder()
-                        .setUsbInfo(macAddress)
-                        .setBaudRate(1200)
-                        .build()
-                }
-
-                else -> {
-                    ConnectionInfo.Builder()
-                        .setBleInfo(macAddress)
-                        .build()
-                }
             }
 
-            mScale = starDeviceManager.createScale(connectionInfo)
-            mScale?.connect(mScaleCallback)
+            "disconnect" -> {
+                mScale?.let { scale ->
+                    scale.disconnect()
+                }
+
+            }
         }
+
+
     }
 
 
@@ -246,14 +247,6 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
         }
     }
 
-    private fun disconnectScale(call: MethodCall, result: Result) {
-        if (eventSink != null && mScale != null) {
-            mScale?.let { scale ->
-                scale.disconnect()
-            }
-           
-        }
-    }
 
     private val mScaleCallback = object : ScaleCallback() {
         override fun onConnect(scale: Scale, status: Int) {
@@ -344,6 +337,12 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
                     data["status"] = "disconnect_success"
                 }
             }
+            eventSink?.success(data)
+
+        }
+
+        override fun onReadScaleData(scale: Scale, scaleData: ScaleData) {
+
         }
     }
 
