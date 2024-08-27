@@ -191,12 +191,7 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
                 }
 
             } else if ("disconnect".equals(action)) {
-                // if (mScale != null) {
-                //     mScale.disconnect();
-                // }
-                data.put("msg", "TESTTTTTTTTTTTTTTTTTTTTTTT. " + (mScale == null));
-                eventSink.success(data);
-
+                mScale.disconnect();
             }
         }
     }
@@ -337,9 +332,7 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
                     break;
             }
 
-            if (eventSink != null) {
-                eventSink.success(data);
-            }
+            eventSink.success(data);
         }
 
         @Override
