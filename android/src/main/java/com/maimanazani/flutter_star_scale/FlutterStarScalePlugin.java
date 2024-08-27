@@ -73,10 +73,10 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
 
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-        if (mScale != null) {
-            mScale.disconnect();
-        }
-        eventSink = null;
+        // if (mScale != null) {
+        //     mScale.disconnect();
+        // }
+        // eventSink = null;
     }
 
     private class MethodRunner implements Runnable {
