@@ -193,13 +193,7 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
             } else if ("disconnect".equals(action)) {
                 if(mScale != null){
                     mScale.disconnect();
-                }else{
-                    data.put("msg", "Something wrong");
-                    data.put("status", "disconnect_failed");
-
-                eventSink.success(data);
-
-                }
+                } 
             }
         }
     }
@@ -346,10 +340,11 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
 
         @Override
         public void onReadScaleData(Scale scale, ScaleData scaleData) {
-            if (eventSink != null) {
-                 data.put("weight", scaleData.getWeight());
+            data.put("msg",scaleData.getStatus() );
 
-                eventSink.success(data);
+            eventSink.success(data);
+            if (eventSink != null) {
+               
             }
         }
     };
