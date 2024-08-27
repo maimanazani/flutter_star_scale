@@ -14,8 +14,8 @@ class StarScale {
   Stream<dynamic>? _stream;
 
   StarScale() {
-    _stream = _streamController.stream.map((params) {
-      return _eventChannel.receiveBroadcastStream(params).last;
+    _stream = _streamController.stream.asyncExpand((params) {
+      return _eventChannel.receiveBroadcastStream(params);
     });
   }
 
