@@ -116,7 +116,7 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
 
     @Override
     public void onCancel(Object arguments) {
-        eventSink = null;
+        // eventSink = null;
     }
 
     private static class MethodResultWrapper implements Result {
