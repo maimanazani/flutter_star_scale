@@ -116,7 +116,7 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
 
     @Override
     public void onCancel(Object arguments) {
-        // eventSink = null;
+        eventSink = null;
     }
 
     private static class MethodResultWrapper implements Result {
@@ -191,7 +191,15 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
                 }
 
             } else if ("disconnect".equals(action)) {
-                mScale.disconnect();
+                if(mScale != null){
+                    mScale.disconnect();
+                }else{
+                    data.put("msg", "Something wrong");
+                    data.put("status", "disconnect_failed");
+
+                eventSink.success(data);
+
+                }
             }
         }
     }
