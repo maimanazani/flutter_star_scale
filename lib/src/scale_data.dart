@@ -21,7 +21,7 @@ class ScaleData {
 
   ScaleStatus? _getStatusFromString(String status) {
     switch (status) {
-      case 'connected':
+      case 'connect_success':
         return ScaleStatus.connect_success;
       case 'connect_failed':
         return ScaleStatus.connect_failed;
