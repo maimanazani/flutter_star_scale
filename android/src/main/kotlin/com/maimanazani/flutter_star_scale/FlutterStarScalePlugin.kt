@@ -33,6 +33,9 @@ import com.starmicronics.starmgsio.ScaleOutputConditionSetting;
 import com.starmicronics.starmgsio.ScaleSetting;
 import com.starmicronics.starmgsio.ScaleType;
 import com.starmicronics.starmgsio.StarDeviceManager;
+import com.starmicronics.starmgsio.StarDeviceManagerCallback;
+
+
 
 /** FlutterStarScalePlugin */
 class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.StreamHandler {
@@ -230,7 +233,7 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
                         item["INTERFACE_TYPE_KEY"] = connectionInfo.interfaceType.name
                         item["DEVICE_NAME_KEY"] = connectionInfo.deviceName
                         item["IDENTIFIER_KEY"] = connectionInfo.identifier
-                        item["SCALE_TYPE_KEY"] = connectionInfo.getScaleType().name()
+                        item["SCALE_TYPE_KEY"] = connectionInfo.getScaleType().name
                         response.add(item)
                         result.success(response)
                     }
