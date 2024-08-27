@@ -1,4 +1,3 @@
-/// Contains info of the scale connection
 class ConnectionInfo {
   /// Interface Type
   String? interfaceTypeKey;
@@ -25,5 +24,15 @@ class ConnectionInfo {
     if (connectionInfo.containsKey('SCALE_TYPE_KEY')) {
       scaleTypeKey = connectionInfo['SCALE_TYPE_KEY'];
     }
+  }
+
+  /// Converts the ConnectionInfo object to a Map
+  Map<String, String?> toMap() {
+    return {
+      'INTERFACE_TYPE_KEY': interfaceTypeKey,
+      'DEVICE_NAME_KEY': deviceNameKey,
+      'IDENTIFIER_KEY': identifierKey,
+      'SCALE_TYPE_KEY': scaleTypeKey,
+    };
   }
 }

@@ -3,8 +3,10 @@ import 'package:flutter_star_scale/flutter_star_scale.dart';
 
 class StarScale {
   static const MethodChannel _channel = MethodChannel('flutter_star_scale');
+  static const EventChannel _eventChannel =
+      EventChannel('flutter_star_scale/events');
 
-  static Future<List<ConnectionInfo>> scanForScales(
+  Future<List<ConnectionInfo>> scanForScales(
       StarInterfaceType interfaceType) async {
     dynamic result =
         await _channel.invokeMethod('startScan', {'type': interfaceType.text});
@@ -15,5 +17,9 @@ class StarScale {
     } else {
       return [];
     }
+  }
+
+  Stream<dynamic> scaleDataStream(ConnectionInfo info) {
+    return _eventChannel.receiveBroadcastStream(info.toMap());
   }
 }

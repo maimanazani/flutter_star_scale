@@ -17,6 +17,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   List<ConnectionInfo> scales = [];
+  final plugin = StarScale();
 
   @override
   void initState() {
@@ -27,7 +28,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> scanScales() async {
     try {
       List<ConnectionInfo> results =
-          await StarScale.scanForScales(StarInterfaceType.BluetoothLowEnergy);
+          await plugin.scanForScales(StarInterfaceType.BluetoothLowEnergy);
       setState(() {
         scales = results;
       });

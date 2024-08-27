@@ -39,6 +39,13 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
     private var mScale: Scale? = null
     private var eventSink: EventChannel.EventSink? = null
 
+    private val data: MutableMap<String, Any> = mutableMapOf(
+        "status" to "online",
+        "date" to System.currentTimeMillis(), // Initial date
+        "unit" to "default_unit",
+        "msg" to ""
+    )
+
     companion object {
         private const val CHANNEL = "flutter_star_scale"
         private const val EVENT_CHANNEL = "flutter_star_scale/events"
@@ -76,12 +83,15 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
             flutterPluginBinding.flutterEngine.dartExecutor,
             flutterPluginBinding.applicationContext
         )
+        val eventChannel = EventChannel(flutterPluginBinding.binaryMessenger, EVENT_CHANNEL)
+        eventChannel.setStreamHandler(this)
     }
 
     override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
         mScale?.let { scale ->
             scale.disconnect()
         }
+        eventSink = null
     }
 
     inner class MethodRunner(call: MethodCall, result: Result) : Runnable {
@@ -92,10 +102,6 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
             when (call.method) {
                 "startScan" -> {
                     scanForScales(call, result)
-                }
-
-                "readData" -> {
-                    readData(call, result)
                 }
 
                 else -> result.notImplemented()
@@ -110,7 +116,7 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
         eventSink = events
-
+        startReadingData(arguments)
     }
 
     override fun onCancel(arguments: Any?) {
@@ -148,37 +154,49 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
         }
     }
 
-    public fun readData(@NonNull call: MethodCall, @NonNull result: Result) {
-        val strInterface: String = call.argument<String>("type") as String
+    private fun startReadingData(arguments: Any?) {
+        val params = arguments as? Map<*, *>
+        val interfaceType = params?.get("INTERFACE_TYPE_KEY") as? String
+        // val handler = Handler(Looper.getMainLooper())
+        // handler.postDelayed(object : Runnable {
+        //     override fun run() {
+        //         data["date"] = System.currentTimeMillis()
 
-        val starDeviceManager = StarDeviceManager(applicationContext);
+        //         // Send the map to the Flutter side
+        //         eventSink?.success(data)
+        //         handler.postDelayed(this, 1000) // Send data every second
+        //     }
+        // }, 1000)
 
-        val connectionInfo = when (strInterface) {
-            "BluetoothLowEnergy" -> {
-                ConnectionInfo.Builder()
-                    .setBleInfo(strInterface)
-                    .build()
+        if (mScale == null) {
+            val starDeviceManager = StarDeviceManager(applicationContext);
+
+            val connectionInfo = when (interfaceType) {
+                "BluetoothLowEnergy" -> {
+                    ConnectionInfo.Builder()
+                        .setBleInfo(interfaceType)
+                        .build()
+                }
+
+                "USB" -> {
+                    ConnectionInfo.Builder()
+                        .setUsbInfo(interfaceType)
+                        .setBaudRate(1200)
+                        .build()
+                }
+
+                else -> {
+                    ConnectionInfo.Builder()
+                        .setBleInfo(interfaceType)
+                        .build()
+                }
             }
 
-            "USB" -> {
-                ConnectionInfo.Builder()
-                    .setUsbInfo(strInterface)
-                    .setBaudRate(1200)
-                    .build()
-            }
-
-            else -> {
-                ConnectionInfo.Builder()
-                    .setBleInfo(strInterface)
-                    .build()
-            }
+            mScale = starDeviceManager.createScale(connectionInfo)
+            mScale?.connect(mScaleCallback)
         }
-
-        mScale = starDeviceManager.createScale(connectionInfo)
-        mScale?.connect(mScaleCallback)
-
-
     }
+
 
     public fun scanForScales(@NonNull call: MethodCall, @NonNull result: Result) {
         val strInterface: String = call.argument<String>("type") as String
@@ -191,30 +209,30 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
                 "USB" -> StarDeviceManager.InterfaceType.USB
                 else -> StarDeviceManager.InterfaceType.All
             }
-            // val item = mutableMapOf<String, String>()
-            // item["INTERFACE_TYPE_KEY"] = "BLE"
-            // item["DEVICE_NAME_KEY"] = "Scale-4502-a12"
-            // item["IDENTIFIER_KEY"] = "62:00:A1:27:99:FC"
-            // item["SCALE_TYPE_KEY"] = "MGTS"
+            val item = mutableMapOf<String, String>()
+            item["INTERFACE_TYPE_KEY"] = "BLE"
+            item["DEVICE_NAME_KEY"] = "Scale-4502-a12"
+            item["IDENTIFIER_KEY"] = "62:00:A1:27:99:FC"
+            item["SCALE_TYPE_KEY"] = "MGTS"
 
-            // response.add(item)
-            // result.success(response)
+            response.add(item)
+            result.success(response)
 
-            val starDeviceManager =
-                StarDeviceManager(applicationContext, interfaceType)
+            // val starDeviceManager =
+            //     StarDeviceManager(applicationContext, interfaceType)
 
-            starDeviceManager.scanForScales(
-                object : StarDeviceManagerCallback() {
-                    override fun onDiscoverScale(@NonNull connectionInfo: ConnectionInfo) {
-                        val item = mutableMapOf<String, String>()
-                        item["INTERFACE_TYPE_KEY"] = connectionInfo.interfaceType.name
-                        item["DEVICE_NAME_KEY"] = connectionInfo.deviceName
-                        item["IDENTIFIER_KEY"] = connectionInfo.identifier
-                        item["SCALE_TYPE_KEY"] = connectionInfo.getScaleType().name()
-                        response.add(item)
-                        result.success(response)
-                    }
-                })
+            // starDeviceManager.scanForScales(
+            //     object : StarDeviceManagerCallback() {
+            //         override fun onDiscoverScale(@NonNull connectionInfo: ConnectionInfo) {
+            //             val item = mutableMapOf<String, String>()
+            //             item["INTERFACE_TYPE_KEY"] = connectionInfo.interfaceType.name
+            //             item["DEVICE_NAME_KEY"] = connectionInfo.deviceName
+            //             item["IDENTIFIER_KEY"] = connectionInfo.identifier
+            //             item["SCALE_TYPE_KEY"] = connectionInfo.getScaleType().name()
+            //             response.add(item)
+            //             result.success(response)
+            //         }
+            //     })
 
         } catch (e: Exception) {
             result.error("PORT_DISCOVERY_ERROR", e.message, null)
@@ -229,38 +247,39 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
             when (status) {
                 Scale.CONNECT_SUCCESS -> {
                     connectSuccess = true
-                    // result.success("Connect success.")
+                    data["msg"] = "Connect success."
                 }
 
                 Scale.CONNECT_NOT_AVAILABLE -> {
-                    //result.success("Failed to connect. (Not available)")
+                    data["msg"] = "Failed to connect. (Not available)"
                 }
 
                 Scale.CONNECT_ALREADY_CONNECTED -> {
-                    // result.success("Failed to connect. (Already connected)")
+                    data["msg"] = "Failed to connect. (Already connected)"
                 }
 
                 Scale.CONNECT_TIMEOUT -> {
-                    // result.success("Failed to connect. (Timeout)")
+                    data["msg"] = "Failed to connect. (Timeout)"
                 }
 
                 Scale.CONNECT_READ_WRITE_ERROR -> {
-                    //  result.success("Failed to connect. (Read Write error)")
+                    data["msg"] = "Failed to connect. (Read Write error)"
                 }
 
                 Scale.CONNECT_NOT_SUPPORTED -> {
-                    //result.success("Failed to connect. (Not supported device)")
+                    data["msg"] = "Failed to connect. (Not supported device)"
                 }
 
                 Scale.CONNECT_NOT_GRANTED_PERMISSION -> {
-                    //result.success("Failed to connect. (Not granted permission)")
+                    data["msg"] = "Failed to connect. (Not granted permission)"
                 }
 
                 else -> {
-                    //result.success("Failed to connect. (Unexpected error)")
+                    data["msg"] = "Failed to connect. (Unexpected error)"
+
                 }
             }
-
+            eventSink?.success(data)
             if (!connectSuccess) {
                 mScale = null
 
