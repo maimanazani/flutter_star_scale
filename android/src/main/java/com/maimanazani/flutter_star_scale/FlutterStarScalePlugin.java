@@ -34,7 +34,7 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
     private final Map<String, Object> data = new HashMap<String, Object>() {{
         put("status", "");
         put("msg", "");
-        put("weight", "");
+        put("weight", 0.00);
 
     }};
 
