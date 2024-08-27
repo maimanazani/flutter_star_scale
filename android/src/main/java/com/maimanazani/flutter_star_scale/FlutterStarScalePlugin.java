@@ -340,11 +340,11 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
 
         @Override
         public void onReadScaleData(Scale scale, ScaleData scaleData) {
-            data.put("msg",scaleData.getStatus() );
-
-            eventSink.success(data);
+         
             if (eventSink != null) {
-               
+                data.put("msg",scaleData.getWeight() );
+
+                eventSink.success(data);
             }
         }
     };
