@@ -36,6 +36,9 @@ class _ScalePageState extends State<ScalePage> {
           connectionText = "${data.msg}";
           _subscription?.cancel();
         }
+        if (data.status == ScaleStatus.connect_success) {
+          connectionText = "${data.msg}";
+        }
       });
     });
   }
@@ -59,30 +62,32 @@ class _ScalePageState extends State<ScalePage> {
                     : Colors.red,
               ),
             ),
-            TextButton(
-              onPressed: () async {
-                if (data.status == ScaleStatus.connect_success) {
-                  await plugin.disconnect();
-                } else if (data.status == ScaleStatus.disconnect_success) {
-                  readScale();
-                }
-              },
-              style: ButtonStyle(
-                shape: WidgetStateProperty.all<RoundedRectangleBorder>(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    side: const BorderSide(color: Colors.black), // Border color
+            if (connectionText.isNotEmpty)
+              TextButton(
+                onPressed: () async {
+                  if (data.status == ScaleStatus.connect_success) {
+                    await plugin.disconnect();
+                  } else if (data.status == ScaleStatus.disconnect_success) {
+                    readScale();
+                  }
+                },
+                style: ButtonStyle(
+                  shape: WidgetStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                      side:
+                          const BorderSide(color: Colors.black), // Border color
+                    ),
                   ),
                 ),
-              ),
-              child: Text(
-                  style: const TextStyle(
-                    color: Colors.black,
-                  ),
-                  data.status == ScaleStatus.connect_success
-                      ? "Disconnect"
-                      : "Connect"),
-            )
+                child: Text(
+                    style: const TextStyle(
+                      color: Colors.black,
+                    ),
+                    data.status == ScaleStatus.connect_success
+                        ? "Disconnect"
+                        : "Connect"),
+              )
           ],
         ),
       ),

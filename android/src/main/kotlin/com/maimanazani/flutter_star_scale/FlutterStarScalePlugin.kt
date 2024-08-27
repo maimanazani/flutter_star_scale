@@ -215,30 +215,30 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
                 "USB" -> StarDeviceManager.InterfaceType.USB
                 else -> StarDeviceManager.InterfaceType.All
             }
-            val item = mutableMapOf<String, String>()
-            item["INTERFACE_TYPE_KEY"] = "BLE"
-            item["DEVICE_NAME_KEY"] = "Scale-4502-a12"
-            item["IDENTIFIER_KEY"] = "62:00:A1:27:99:FC"
-            item["SCALE_TYPE_KEY"] = "MGTS"
+            // val item = mutableMapOf<String, String>()
+            // item["INTERFACE_TYPE_KEY"] = "BLE"
+            // item["DEVICE_NAME_KEY"] = "Scale-4502-a12"
+            // item["IDENTIFIER_KEY"] = "62:00:A1:27:99:FC"
+            // item["SCALE_TYPE_KEY"] = "MGTS"
 
-            response.add(item)
-            result.success(response)
+            // response.add(item)
+            // result.success(response)
 
-            // val starDeviceManager =
-            //     StarDeviceManager(applicationContext, interfaceType)
+            val starDeviceManager =
+                StarDeviceManager(applicationContext, interfaceType)
 
-            // starDeviceManager.scanForScales(
-            //     object : StarDeviceManagerCallback() {
-            //         override fun onDiscoverScale(@NonNull connectionInfo: ConnectionInfo) {
-            //             val item = mutableMapOf<String, String>()
-            //             item["INTERFACE_TYPE_KEY"] = connectionInfo.interfaceType.name
-            //             item["DEVICE_NAME_KEY"] = connectionInfo.deviceName
-            //             item["IDENTIFIER_KEY"] = connectionInfo.identifier
-            //             item["SCALE_TYPE_KEY"] = connectionInfo.getScaleType().name
-            //             response.add(item)
-            //             result.success(response)
-            //         }
-            //     })
+            starDeviceManager.scanForScales(
+                object : StarDeviceManagerCallback() {
+                    override fun onDiscoverScale(@NonNull connectionInfo: ConnectionInfo) {
+                        val item = mutableMapOf<String, String>()
+                        item["INTERFACE_TYPE_KEY"] = connectionInfo.interfaceType.name
+                        item["DEVICE_NAME_KEY"] = connectionInfo.deviceName
+                        item["IDENTIFIER_KEY"] = connectionInfo.identifier
+                        item["SCALE_TYPE_KEY"] = connectionInfo.getScaleType().name
+                        response.add(item)
+                        result.success(response)
+                    }
+                })
 
         } catch (e: Exception) {
             result.error("PORT_DISCOVERY_ERROR", e.message, null)
