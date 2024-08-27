@@ -341,8 +341,8 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
         @Override
         public void onReadScaleData(Scale scale, ScaleData scaleData) {
          
-            if (eventSink != null) {
-                data.put("msg",scaleData.getWeight() );
+            if (mScale!=null && eventSink != null) {
+                data.put("weight",scaleData.getWeight() );
 
                 eventSink.success(data);
             }
