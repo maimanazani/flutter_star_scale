@@ -27,6 +27,9 @@ import com.starmicronics.starmgsio.ScaleOutputConditionSetting;
 import com.starmicronics.starmgsio.ScaleSetting;
 import com.starmicronics.starmgsio.ScaleType;
 import com.starmicronics.starmgsio.StarDeviceManager;
+import com.starmicronics.starmgsio.StarDeviceManagerCallback;
+
+
 
 public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler, EventChannel.StreamHandler {
     private Scale mScale = null;
