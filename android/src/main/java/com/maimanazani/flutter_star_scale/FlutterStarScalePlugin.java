@@ -34,6 +34,8 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
     private final Map<String, Object> data = new HashMap<String, Object>() {{
         put("status", "");
         put("msg", "");
+        put("weight", "");
+
     }};
 
     private static final String CHANNEL = "flutter_star_scale";
@@ -340,7 +342,7 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
         @Override
         public void onReadScaleData(Scale scale, ScaleData scaleData) {
             if (eventSink != null) {
-                 data.put("msg", scaleData.getWeight());
+                 data.put("weight", scaleData.getWeight());
 
                 eventSink.success(data);
             }

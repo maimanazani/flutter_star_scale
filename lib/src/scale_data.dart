@@ -8,6 +8,7 @@ enum ScaleStatus {
 class ScaleData {
   ScaleStatus? status;
   String? msg;
+  double? weight;
 
   ScaleData(dynamic data) {
     if (data.containsKey('status')) {
@@ -16,6 +17,9 @@ class ScaleData {
     }
     if (data.containsKey('msg')) {
       msg = data['msg'];
+    }
+    if (data.containsKey('weight')) {
+      weight = data['weight'];
     }
   }
 
