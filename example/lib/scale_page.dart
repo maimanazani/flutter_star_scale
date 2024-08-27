@@ -89,12 +89,13 @@ class _ScalePageState extends State<ScalePage> {
                 data.status == ScaleStatus.disconnect_failed)
               TextButton(
                 onPressed: () {
-                  if (data.status == ScaleStatus.connect_success) {
-                    starScale.disconnect();
-                  } else if (data.status == ScaleStatus.disconnect_success ||
-                      data.status == ScaleStatus.connect_failed) {
-                    starScale.connect(widget.connectionInfo);
-                  }
+                  // if (data.status == ScaleStatus.connect_success) {
+                  //   starScale.disconnect();
+                  // } else if (data.status == ScaleStatus.disconnect_success ||
+                  //     data.status == ScaleStatus.connect_failed) {
+                  //   starScale.connect(widget.connectionInfo);
+                  // }
+                  starScale.disconnect();
                 },
                 style: ButtonStyle(
                   shape: WidgetStateProperty.all<RoundedRectangleBorder>(

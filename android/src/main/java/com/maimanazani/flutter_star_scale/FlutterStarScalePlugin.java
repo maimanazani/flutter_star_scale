@@ -191,9 +191,12 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
                 }
 
             } else if ("disconnect".equals(action)) {
-                if (mScale != null) {
-                    mScale.disconnect();
-                }
+                // if (mScale != null) {
+                //     mScale.disconnect();
+                // }
+                data.put("msg", "TESTTTTTTTTTTTTTTTTTTTTTTT. " + (mScale == null));
+                eventSink.success(data);
+
             }
         }
     }
@@ -211,30 +214,30 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
             } else {
                 interfaceType = StarDeviceManager.InterfaceType.All;
             }
-            // List<Map<String, String>> responseList = new ArrayList<>();
+            List<Map<String, String>> responseList = new ArrayList<>();
 
-            // Map<String, String> item = new HashMap<>();
-            // item.put("INTERFACE_TYPE_KEY" , "BLE");
-            // item.put("DEVICE_NAME_KEY","Scale-4502-a12");
-            // item.put("IDENTIFIER_KEY","62:00:A1:27:99:FC");
-            // item.put("SCALE_TYPE_KEY","MGTS");
-            // responseList.add(item); 
-            // result.success(responseList);
-            StarDeviceManager starDeviceManager = new StarDeviceManager(applicationContext, interfaceType);
+            Map<String, String> item = new HashMap<>();
+            item.put("INTERFACE_TYPE_KEY" , "BLE");
+            item.put("DEVICE_NAME_KEY","Scale-4502-a12");
+            item.put("IDENTIFIER_KEY","62:00:A1:27:99:FC");
+            item.put("SCALE_TYPE_KEY","MGTS");
+            responseList.add(item); 
+            result.success(responseList);
+            // StarDeviceManager starDeviceManager = new StarDeviceManager(applicationContext, interfaceType);
 
-            starDeviceManager.scanForScales(new StarDeviceManagerCallback() {
-                @Override
-                public void onDiscoverScale(@NonNull ConnectionInfo connectionInfo) {
-                 List<Map<String, String>> responseList = new ArrayList<>();
-                    Map<String, String> item = new HashMap<>();
-                    item.put("INTERFACE_TYPE_KEY", connectionInfo.getInterfaceType().name());
-                    item.put("DEVICE_NAME_KEY", connectionInfo.getDeviceName());
-                    item.put("IDENTIFIER_KEY", connectionInfo.getIdentifier());
-                    item.put("SCALE_TYPE_KEY", connectionInfo.getScaleType().name());
-                    responseList.add(item); 
-                    result.success(responseList);
-                }
-            });
+            // starDeviceManager.scanForScales(new StarDeviceManagerCallback() {
+            //     @Override
+            //     public void onDiscoverScale(@NonNull ConnectionInfo connectionInfo) {
+            //      List<Map<String, String>> responseList = new ArrayList<>();
+            //         Map<String, String> item = new HashMap<>();
+            //         item.put("INTERFACE_TYPE_KEY", connectionInfo.getInterfaceType().name());
+            //         item.put("DEVICE_NAME_KEY", connectionInfo.getDeviceName());
+            //         item.put("IDENTIFIER_KEY", connectionInfo.getIdentifier());
+            //         item.put("SCALE_TYPE_KEY", connectionInfo.getScaleType().name());
+            //         responseList.add(item); 
+            //         result.success(responseList);
+            //     }
+            // });
 
         } catch (Exception e) {
             result.error("PORT_DISCOVERY_ERROR", e.getMessage(), null);

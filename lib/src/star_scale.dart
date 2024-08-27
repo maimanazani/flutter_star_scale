@@ -35,11 +35,11 @@ class StarScale {
     }
   }
 
-  Future<void> connect(ConnectionInfo info) async {
+  void connect(ConnectionInfo info) {
     _streamController.add({...info.toMap(), "ACTION": "connect"});
   }
 
-  Future<void> disconnect() async {
+  void disconnect() {
     _streamController.add({"ACTION": "disconnect"});
   }
 
