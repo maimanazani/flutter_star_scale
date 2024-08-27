@@ -62,12 +62,16 @@ class _ScalePageState extends State<ScalePage> {
                     : Colors.red,
               ),
             ),
-            if (connectionText.isNotEmpty)
+            if (data.status == ScaleStatus.connect_success ||
+                data.status == ScaleStatus.connect_failed ||
+                data.status == ScaleStatus.disconnect_success ||
+                data.status == ScaleStatus.disconnect_failed)
               TextButton(
                 onPressed: () async {
                   if (data.status == ScaleStatus.connect_success) {
                     await plugin.disconnect();
-                  } else if (data.status == ScaleStatus.disconnect_success) {
+                  } else if (data.status == ScaleStatus.disconnect_success ||
+                      data.status == ScaleStatus.connect_failed) {
                     readScale();
                   }
                 },
