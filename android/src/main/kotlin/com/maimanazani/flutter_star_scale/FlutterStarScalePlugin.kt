@@ -342,7 +342,7 @@ class FlutterStarScalePlugin : FlutterPlugin, MethodCallHandler, EventChannel.St
         }
 
         override fun onReadScaleData(scale: Scale, scaleData: ScaleData) {
-
+            eventSink?.success(data)
         }
     }
 
