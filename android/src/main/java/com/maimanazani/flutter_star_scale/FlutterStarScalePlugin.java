@@ -354,16 +354,16 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
         public void onReadScaleData(Scale scale, ScaleData scaleData) {
 
             if (mScale != null && eventSink != null) {
-                Double prev = (Double) data.get("weight");
+                Map<String, Object> dataMap = (Map<String, Object>) data.get("weight_data");
+
+                Double prev = (Double) dataMap.get("weight");
 
                 double cur = scaleData.getWeight();
                 String unit = scaleData.getUnit().toString();
 
                 if (prev == null || prev != cur) {
-                    Map<String, Object> dataMap = (Map<String, Object>) data.get("weight_data");
                     dataMap.put("weight", cur);
                     dataMap.put("unit", unit);
-
 
                     if (eventSink != null) {
                         eventSink.success(data);
