@@ -5,11 +5,32 @@ enum ScaleStatus {
   disconnect_failed
 }
 
+class WeightData {
+  String? unit;
+  double? weight;
+
+  WeightData(dynamic data) {
+    if (data.containsKey('unit')) {
+      unit = data['unit'];
+    }
+    if (data.containsKey('weight')) {
+      weight = data['weight'];
+    }
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'unit': unit,
+      'weight': weight,
+    };
+  }
+}
+
 class ScaleData {
   ScaleStatus? status;
   String? msg;
-  double? weight;
-  String? unit;
+
+  WeightData? weightData;
 
   ScaleData(dynamic data) {
     if (data.containsKey('status')) {
@@ -19,12 +40,16 @@ class ScaleData {
     if (data.containsKey('msg')) {
       msg = data['msg'];
     }
-    if (data.containsKey('weight')) {
-      weight = data['weight'];
+
+    if (data.containsKey('weight_data')) {
+      weightData = WeightData(data['weight_data']);
     }
-    if (data.containsKey('unit')) {
-      unit = data['unit'];
-    }
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'weight_data': weightData?.toMap(),
+    };
   }
 
   ScaleStatus? _getStatusFromString(String status) {

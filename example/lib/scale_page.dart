@@ -17,8 +17,6 @@ class _ScalePageState extends State<ScalePage> {
   String connectionText = "";
   final starScale = StarScale();
   ScaleData data = ScaleData({});
-  double weight = 0.00;
-  String unit = "kg";
 
   @override
   void initState() {
@@ -35,13 +33,12 @@ class _ScalePageState extends State<ScalePage> {
         print("Received data: $event");
         setState(() {
           data = ScaleData(event);
+          print(data.toMap());
           if (data.status == ScaleStatus.connect_failed) {
             connectionText = "${data.msg}";
           }
           if (data.status == ScaleStatus.connect_success) {
             connectionText = "${data.msg}";
-            weight = data.weight ?? 0;
-            unit = "${data.unit}";
           }
         });
       },
@@ -53,19 +50,6 @@ class _ScalePageState extends State<ScalePage> {
       },
     );
     starScale.connect(widget.connectionInfo);
-    // plugin.listenToScaleData(
-    //   widget.connectionInfo,
-    //   (event) {
-    //     print("Received data: $event");
-
-    //   },
-    //   onError: (error) {
-    //     print("Error receiving event: $error");
-    //   },
-    //   onDone: () {
-    //     print("Stream done");
-    //   },
-    // );
   }
 
   @override
@@ -124,14 +108,14 @@ class _ScalePageState extends State<ScalePage> {
                 textBaseline: TextBaseline.alphabetic, // Add this line
                 children: [
                   Text(
-                    weight.toString(),
+                    data.weightData?.weight?.toString() ?? "0.00",
                     style: const TextStyle(
                       fontSize: 50,
                     ),
                   ),
                   Text(
-                    data.unit ?? "",
-                    style: TextStyle(
+                    data.weightData?.unit ?? "",
+                    style: const TextStyle(
                       fontSize: 20,
                     ),
                   ),
