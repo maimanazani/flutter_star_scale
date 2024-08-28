@@ -5,9 +5,24 @@ enum ScaleStatus {
   disconnect_failed
 }
 
+enum ScaleDataStatus { INVALID, STABLE, UNSTABLE, ERROR }
+
+enum ScaleDataType {
+  INVALID,
+  NET_NOT_TARED,
+  NET,
+  TARE,
+  PRESET_TARE,
+  TOTAL,
+  UNIT,
+  GROSS
+}
+
 class WeightData {
   String? unit;
   double? weight;
+  ScaleDataStatus? status;
+  ScaleDataType? type;
 
   WeightData(dynamic data) {
     if (data.containsKey('unit')) {
@@ -16,13 +31,61 @@ class WeightData {
     if (data.containsKey('weight')) {
       weight = data['weight'];
     }
+    if (data.containsKey('status')) {
+      String statusString = data['status'];
+      status = _getStatusFromString(statusString);
+    }
+    if (data.containsKey('type')) {
+      String statusString = data['type'];
+      type = _getTypeFromString(statusString);
+    }
   }
 
   Map<String, dynamic> toMap() {
     return {
       'unit': unit,
       'weight': weight,
+      'status': status?.name,
+      'type': type?.name,
     };
+  }
+
+  ScaleDataType? _getTypeFromString(String type) {
+    switch (type) {
+      case 'INVALID':
+        return ScaleDataType.INVALID;
+      case 'NET_NOT_TARED':
+        return ScaleDataType.NET_NOT_TARED;
+      case 'NET':
+        return ScaleDataType.NET;
+      case 'TARE':
+        return ScaleDataType.TARE;
+      case 'PRESET_TARE':
+        return ScaleDataType.PRESET_TARE;
+      case 'GROSS':
+        return ScaleDataType.GROSS;
+      case 'TOTAL':
+        return ScaleDataType.TOTAL;
+      case 'UNIT':
+        return ScaleDataType.UNIT;
+      default:
+        return ScaleDataType.INVALID;
+    }
+  }
+
+  ScaleDataStatus? _getStatusFromString(String status) {
+    switch (status) {
+      case 'ERROR':
+        return ScaleDataStatus.ERROR;
+      case 'INVALID':
+        return ScaleDataStatus.INVALID;
+      case 'STABLE':
+        return ScaleDataStatus.STABLE;
+      case 'UNSTABLE':
+        return ScaleDataStatus.UNSTABLE;
+      default:
+        return ScaleDataStatus.INVALID;
+    }
   }
 }
 
@@ -63,7 +126,7 @@ class ScaleData {
       case 'disconnect_failed':
         return ScaleStatus.disconnect_failed;
       default:
-        return null; // or handle the unknown case as needed
+        return null;
     }
   }
 }

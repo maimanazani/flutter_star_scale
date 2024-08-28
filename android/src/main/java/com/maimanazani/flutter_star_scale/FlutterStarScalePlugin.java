@@ -38,6 +38,8 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
     Map<String, Object> scaleWeight = new HashMap<String, Object>() {{
         put("unit", "lbs");
         put("weight", 0.00);
+        put("status", "INVALID");
+        put("type", "INVALID");
     }};
     private final Map<String, Object> data = new HashMap<String, Object>() {{
         put("status", "");
@@ -354,16 +356,21 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
         public void onReadScaleData(Scale scale, ScaleData scaleData) {
 
             if (mScale != null && eventSink != null) {
-                Map<String, Object> dataMap = (Map<String, Object>) data.get("weight_data");
+                Map<String, Object> weightData = (Map<String, Object>) data.get("weight_data");
 
-                Double prev = (Double) dataMap.get("weight");
+                Double prev = (Double) weightData.get("weight");
 
                 double cur = scaleData.getWeight();
                 String unit = scaleData.getUnit().toString();
+                String status =  scaleData.getStatus().toString();
+                String type =  scaleData.getDataType().toString();
+
 
                 if (prev == null || prev != cur) {
-                    dataMap.put("weight", cur);
-                    dataMap.put("unit", unit);
+                    weightData.put("weight", cur);
+                    weightData.put("unit", unit);
+                    weightData.put("status", status);
+                    weightData.put("type", type);
 
                     if (eventSink != null) {
                         eventSink.success(data);
