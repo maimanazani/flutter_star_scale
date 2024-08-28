@@ -102,19 +102,36 @@ class _ScalePageState extends State<ScalePage> {
                         : "Connect"),
               ),
             if (data.status == ScaleStatus.connect_success)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic, // Add this line
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic, // Add this line
+                    children: [
+                      Text(
+                        data.weightData?.weight?.toString() ?? "0.00",
+                        style: const TextStyle(
+                          fontSize: 50,
+                        ),
+                      ),
+                      Text(
+                        data.weightData?.unit ?? "",
+                        style: const TextStyle(
+                          fontSize: 20,
+                        ),
+                      ),
+                    ],
+                  ),
                   Text(
-                    data.weightData?.weight?.toString() ?? "0.00",
+                    "Status: ${data.weightData?.status?.name}",
                     style: const TextStyle(
-                      fontSize: 50,
+                      fontSize: 20,
                     ),
                   ),
                   Text(
-                    data.weightData?.unit ?? "",
+                    "Type: ${data.weightData?.type?.name}",
                     style: const TextStyle(
                       fontSize: 20,
                     ),
