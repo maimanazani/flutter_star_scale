@@ -30,7 +30,7 @@ class _ScalePageState extends State<ScalePage> {
     });
     starScale.scaleDataStream?.listen(
       (event) {
-        print("Received data: $event");
+        // print("Received data: $event");
         setState(() {
           data = Scale(event);
           print(data.toMap());

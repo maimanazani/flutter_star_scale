@@ -110,6 +110,10 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
                 case "startScan":
                     scanForScales(call, result);
                     break;
+                case "tare":
+                    result.success("tare" + " " + (mScale == null) + " " + (eventSink == null));
+                    break;
+                    
 
                 default:
                     result.notImplemented();
@@ -210,14 +214,15 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
                 if (mScale != null) {
                     mScale.disconnect();
                 }
-            } else if ("tare".equals(action)) {
-                if (mScale != null) {
-                    Map<String, Object> setting = (Map<String, Object>) data.get("scale_update_setting");
-                    setting.put("status", "LOADING");
-                    eventSink.success(data);
-                    mScale.updateSetting(ScaleSetting.ZeroPointAdjustment);
-                }
-            }
+            } 
+            // else if ("tare".equals(action)) {
+            //     if (mScale != null) {
+            //         Map<String, Object> setting = (Map<String, Object>) data.get("scale_update_setting");
+            //         setting.put("status", "LOADING");
+            //         eventSink.success(data);
+            //         mScale.updateSetting(ScaleSetting.ZeroPointAdjustment);
+            //     }
+            // }
         }
     }
 

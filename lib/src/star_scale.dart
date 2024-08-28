@@ -43,8 +43,10 @@ class StarScale {
     _streamController.add({"ACTION": "disconnect"});
   }
 
-  void tare() {
-    _streamController.add({"ACTION": "tare"});
+  Future<void> tare() async {
+    // _streamController.add({"ACTION": "tare"});
+    dynamic result = await _channel.invokeMethod('tare');
+    print(result);
   }
 
   void dispose() {
