@@ -1,22 +1,4 @@
-enum ScaleStatus {
-  connect_success,
-  connect_failed,
-  disconnect_success,
-  disconnect_failed
-}
-
-enum ScaleDataStatus { INVALID, STABLE, UNSTABLE, ERROR }
-
-enum ScaleDataType {
-  INVALID,
-  NET_NOT_TARED,
-  NET,
-  TARE,
-  PRESET_TARE,
-  TOTAL,
-  UNIT,
-  GROSS
-}
+import 'package:flutter_star_scale/flutter_star_scale.dart';
 
 class WeightData {
   String? unit;
@@ -52,8 +34,6 @@ class WeightData {
 
   ScaleDataType? _getTypeFromString(String type) {
     switch (type) {
-      case 'INVALID':
-        return ScaleDataType.INVALID;
       case 'NET_NOT_TARED':
         return ScaleDataType.NET_NOT_TARED;
       case 'NET':
@@ -68,6 +48,7 @@ class WeightData {
         return ScaleDataType.TOTAL;
       case 'UNIT':
         return ScaleDataType.UNIT;
+      case 'INVALID':
       default:
         return ScaleDataType.INVALID;
     }
@@ -77,25 +58,80 @@ class WeightData {
     switch (status) {
       case 'ERROR':
         return ScaleDataStatus.ERROR;
-      case 'INVALID':
-        return ScaleDataStatus.INVALID;
       case 'STABLE':
         return ScaleDataStatus.STABLE;
       case 'UNSTABLE':
         return ScaleDataStatus.UNSTABLE;
+      case 'INVALID':
       default:
         return ScaleDataStatus.INVALID;
     }
   }
 }
 
-class ScaleData {
+class UpdateScaleSetting {
+  ScaleDataUpdateSettingStatus? status;
+  ScaleDataUpdateSettingResponse? response;
+
+  UpdateScaleSetting(dynamic data) {
+    if (data.containsKey('status')) {
+      String statusString = data['status'];
+      status = _getStatusFromString(statusString);
+    }
+    if (data.containsKey('type')) {
+      String statusString = data['type'];
+      response = _getResponseFromString(statusString);
+    }
+  }
+
+  ScaleDataUpdateSettingStatus? _getStatusFromString(String status) {
+    switch (status) {
+      case 'LOADING':
+        return ScaleDataUpdateSettingStatus.LOADING;
+      case 'LOADED':
+        return ScaleDataUpdateSettingStatus.LOADED;
+      case 'INITIAL':
+      default:
+        return ScaleDataUpdateSettingStatus.INITIAL;
+    }
+  }
+
+  ScaleDataUpdateSettingResponse? _getResponseFromString(String response) {
+    switch (response) {
+      case 'UPDATE_SETTING_SUCCESS':
+        return ScaleDataUpdateSettingResponse.UPDATE_SETTING_SUCCESS;
+      case 'UPDATE_SETTING_NOT_CONNECTED':
+        return ScaleDataUpdateSettingResponse.UPDATE_SETTING_NOT_CONNECTED;
+      case 'UPDATE_SETTING_REQUEST_REJECTED':
+        return ScaleDataUpdateSettingResponse.UPDATE_SETTING_REQUEST_REJECTED;
+      case 'UPDATE_SETTING_TIMEOUT':
+        return ScaleDataUpdateSettingResponse.UPDATE_SETTING_TIMEOUT;
+      case 'UPDATE_SETTING_ALREADY_EXECUTING':
+        return ScaleDataUpdateSettingResponse.UPDATE_SETTING_ALREADY_EXECUTING;
+      case 'UPDATE_SETTING_UNEXPECTED_ERROR':
+        return ScaleDataUpdateSettingResponse.UPDATE_SETTING_UNEXPECTED_ERROR;
+      case 'UPDATE_SETTING_NOT_SUPPORTED':
+      default:
+        return ScaleDataUpdateSettingResponse.UPDATE_SETTING_NOT_SUPPORTED;
+    }
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'status': status?.name,
+      'response': response?.name,
+    };
+  }
+}
+
+class Scale {
   ScaleStatus? status;
   String? msg;
 
   WeightData? weightData;
+  UpdateScaleSetting? updateScaleSetting;
 
-  ScaleData(dynamic data) {
+  Scale(dynamic data) {
     if (data.containsKey('status')) {
       String statusString = data['status'];
       status = _getStatusFromString(statusString);
@@ -107,11 +143,16 @@ class ScaleData {
     if (data.containsKey('weight_data')) {
       weightData = WeightData(data['weight_data']);
     }
+
+    if (data.containsKey('scale_update_setting')) {
+      updateScaleSetting = UpdateScaleSetting(data['scale_update_setting']);
+    }
   }
 
   Map<String, dynamic> toMap() {
     return {
       'weight_data': weightData?.toMap(),
+      'scale_update_setting': updateScaleSetting?.toMap(),
     };
   }
 

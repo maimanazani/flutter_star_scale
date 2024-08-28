@@ -19,6 +19,7 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+
 import com.starmicronics.starmgsio.ConnectionInfo;
 import com.starmicronics.starmgsio.Scale;
 import com.starmicronics.starmgsio.ScaleCallback;
@@ -30,10 +31,15 @@ import com.starmicronics.starmgsio.StarDeviceManager;
 import com.starmicronics.starmgsio.StarDeviceManagerCallback;
 
 
-
 public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler, EventChannel.StreamHandler {
     private Scale mScale = null;
     private EventChannel.EventSink eventSink = null;
+
+
+    Map<String, Object> scaleUpdateSetting = new HashMap<String, Object>() {{
+        put("status", "INITIAL");
+        put("response", "UPDATE_SETTING_NOT_SUPPORTED");
+    }};
 
     Map<String, Object> scaleWeight = new HashMap<String, Object>() {{
         put("unit", "lbs");
@@ -45,7 +51,7 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
         put("status", "");
         put("msg", "");
         put("weight_data", scaleWeight);
-
+        put("scale_update_setting", scaleUpdateSetting);
     }};
 
     private static final String CHANNEL = "flutter_star_scale";
@@ -206,6 +212,9 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
                 }
             } else if ("tare".equals(action)) {
                 if (mScale != null) {
+                    Map<String, Object> setting = (Map<String, Object>) data.get("scale_update_setting");
+                    setting.put("status", "LOADING");
+                    eventSink.success(data);
                     mScale.updateSetting(ScaleSetting.ZeroPointAdjustment);
                 }
             }
@@ -362,8 +371,8 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
 
                 double cur = scaleData.getWeight();
                 String unit = scaleData.getUnit().toString();
-                String status =  scaleData.getStatus().toString();
-                String type =  scaleData.getDataType().toString();
+                String status = scaleData.getStatus().toString();
+                String type = scaleData.getDataType().toString();
 
 
                 if (prev == null || prev != cur) {
@@ -382,7 +391,40 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
 
         @Override
         public void onUpdateSetting(Scale scale, ScaleSetting scaleSetting, int status) {
+            Map<String, Object> setting = (Map<String, Object>) data.get("scale_update_setting");
+
             if (scaleSetting == ScaleSetting.ZeroPointAdjustment) {
+                switch (status) {
+                    case Scale.UPDATE_SETTING_SUCCESS:
+                        setting.put("response", "UPDATE_SETTING_SUCCESS");
+                        break;
+                    case Scale.UPDATE_SETTING_NOT_CONNECTED:
+                        setting.put("response", "UPDATE_SETTING_NOT_CONNECTED");
+                        break;
+                    case Scale.UPDATE_SETTING_REQUEST_REJECTED:
+                        setting.put("response", "UPDATE_SETTING_REQUEST_REJECTED");
+                        break;
+                    case Scale.UPDATE_SETTING_TIMEOUT:
+                        setting.put("response", "UPDATE_SETTING_TIMEOUT");
+                        break;
+                    case Scale.UPDATE_SETTING_ALREADY_EXECUTING:
+                        setting.put("response", "UPDATE_SETTING_ALREADY_EXECUTING");
+                        break;
+                    case Scale.UPDATE_SETTING_UNEXPECTED_ERROR:
+                        setting.put("response", "UPDATE_SETTING_UNEXPECTED_ERROR");
+                        break;
+                    case Scale.UPDATE_SETTING_NOT_SUPPORTED:
+                        setting.put("response", "UPDATE_SETTING_NOT_SUPPORTED");
+                        break;
+                    default:
+                        setting.put("response", "UPDATE_SETTING_NOT_SUPPORTED");
+                        break;
+                }
+            }
+            setting.put("status", "LOADED");
+
+            if (eventSink != null) {
+                eventSink.success(data);
             }
         }
 

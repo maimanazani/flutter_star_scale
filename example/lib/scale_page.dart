@@ -16,7 +16,7 @@ class _ScalePageState extends State<ScalePage> {
   StreamSubscription<dynamic>? _subscription;
   String connectionText = "";
   final starScale = StarScale();
-  ScaleData data = ScaleData({});
+  Scale data = Scale({});
 
   @override
   void initState() {
@@ -32,7 +32,7 @@ class _ScalePageState extends State<ScalePage> {
       (event) {
         print("Received data: $event");
         setState(() {
-          data = ScaleData(event);
+          data = Scale(event);
           print(data.toMap());
           if (data.status == ScaleStatus.connect_failed) {
             connectionText = "${data.msg}";
