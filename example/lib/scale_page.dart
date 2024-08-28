@@ -28,12 +28,12 @@ class _ScalePageState extends State<ScalePage> {
     setState(() {
       connectionText = "Connecting to scale...";
     });
-    starScale.scaleDataStream?.listen(
+    starScale.scaleDataStream.listen(
       (event) {
-        // print("Received data: $event");
+        print("Received data: $event");
         setState(() {
           data = Scale(event);
-          print(data.toMap());
+          //  print(data.toMap());
           if (data.status == ScaleStatus.connect_failed) {
             connectionText = "${data.msg}";
           }

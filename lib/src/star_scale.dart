@@ -4,22 +4,26 @@ import 'package:flutter/services.dart';
 import 'package:flutter_star_scale/flutter_star_scale.dart';
 
 class StarScale {
-  static const MethodChannel _channel = MethodChannel('flutter_star_scale');
   static const EventChannel _eventChannel =
       EventChannel('flutter_star_scale/events');
+  static const MethodChannel _channel = MethodChannel('flutter_star_scale');
 
-  StreamSubscription<dynamic>? _subscription;
   final StreamController<dynamic> _streamController =
-      StreamController.broadcast();
-  Stream<dynamic>? _stream;
+      StreamController<dynamic>.broadcast();
 
-  StarScale() {
-    _stream = _streamController.stream.asyncExpand((params) {
-      return _eventChannel.receiveBroadcastStream(params);
+  Stream<dynamic> get scaleDataStream => _streamController.stream;
+
+  void _startListeningToEventChannel(dynamic data) {
+    _eventChannel.receiveBroadcastStream(data).listen((event) {
+      _streamController.add(event);
+    }, onError: (error) {
+      _streamController.addError(error);
     });
   }
 
-  Stream<dynamic>? get scaleDataStream => _stream;
+  void sink(dynamic data) {
+    _startListeningToEventChannel(data);
+  }
 
   Future<List<ConnectionInfo>> scanForScales(
       StarInterfaceType interfaceType) async {
@@ -36,21 +40,18 @@ class StarScale {
   }
 
   void connect(ConnectionInfo info) {
-    _streamController.add({...info.toMap(), "ACTION": "connect"});
+    sink({...info.toMap(), "ACTION": "connect"});
+  }
+
+  void tare() {
+    sink({"ACTION": "tare"});
   }
 
   void disconnect() {
-    _streamController.add({"ACTION": "disconnect"});
-  }
-
-  Future<void> tare() async {
-    // _streamController.add({"ACTION": "tare"});
-    dynamic result = await _channel.invokeMethod('tare');
-    print(result);
+    sink({"ACTION": "disconnect"});
   }
 
   void dispose() {
-    _subscription?.cancel();
     _streamController.close();
   }
 }

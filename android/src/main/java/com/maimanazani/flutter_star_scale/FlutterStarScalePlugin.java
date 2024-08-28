@@ -30,11 +30,14 @@ import com.starmicronics.starmgsio.ScaleType;
 import com.starmicronics.starmgsio.StarDeviceManager;
 import com.starmicronics.starmgsio.StarDeviceManagerCallback;
 
-
 public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler, EventChannel.StreamHandler {
+    private static final String CHANNEL = "flutter_star_scale";
+    private static final String EVENT_CHANNEL = "flutter_star_scale/events";
+    private MethodChannel methodChannel;
     private Scale mScale = null;
-    private EventChannel.EventSink eventSink = null;
-
+    private EventChannel eventChannel;
+    private EventChannel.EventSink eventSink;
+    private static Context applicationContext;
 
     Map<String, Object> scaleUpdateSetting = new HashMap<String, Object>() {{
         put("status", "INITIAL");
@@ -54,132 +57,45 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
         put("scale_update_setting", scaleUpdateSetting);
     }};
 
-    private static final String CHANNEL = "flutter_star_scale";
-    private static final String EVENT_CHANNEL = "flutter_star_scale/events";
-    private static Context applicationContext;
-
-
-    public static void setupPlugin(BinaryMessenger messenger, Context context) {
-        try {
-            applicationContext = context.getApplicationContext();
-            MethodChannel channel = new MethodChannel(messenger, CHANNEL);
-            channel.setMethodCallHandler(new FlutterStarScalePlugin());
-
-            EventChannel eventChannel = new EventChannel(messenger, EVENT_CHANNEL);
-            eventChannel.setStreamHandler(new FlutterStarScalePlugin());
-        } catch (Exception e) {
-            Log.e("FlutterStarScalePlugin", "Registration failed", e);
-        }
-    }
 
     @Override
     public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-        MethodChannel channel = new MethodChannel(
-                flutterPluginBinding.getFlutterEngine().getDartExecutor(),
-                CHANNEL
-        );
-        channel.setMethodCallHandler(new FlutterStarScalePlugin());
-        setupPlugin(
-                flutterPluginBinding.getFlutterEngine().getDartExecutor(),
-                flutterPluginBinding.getApplicationContext()
-        );
-        EventChannel eventChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(), EVENT_CHANNEL);
+        applicationContext = flutterPluginBinding.getApplicationContext();
+        methodChannel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), CHANNEL);
+        methodChannel.setMethodCallHandler(this);
+
+        eventChannel = new EventChannel(flutterPluginBinding.getBinaryMessenger(), EVENT_CHANNEL);
         eventChannel.setStreamHandler(this);
     }
 
     @Override
-    public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-        if (mScale != null) {
-            mScale.disconnect();
-        }
-        eventSink = null;
-    }
-
-    private class MethodRunner implements Runnable {
-        private final MethodCall call;
-        private final Result result;
-
-        MethodRunner(MethodCall call, Result result) {
-            this.call = call;
-            this.result = result;
-        }
-
-        @Override
-        public void run() {
-            switch (call.method) {
-                case "startScan":
-                    scanForScales(call, result);
-                    break;
-                case "tare":
-                    result.success("tare" + " " + (mScale == null) + " " + (eventSink == null));
-                    break;
-                    
-
-                default:
-                    result.notImplemented();
-                    break;
-            }
-        }
-    }
-
-    @Override
-    public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
-        MethodResultWrapper methodResultWrapper = new MethodResultWrapper(result);
-        new Thread(new MethodRunner(call, methodResultWrapper)).start();
-    }
-
-    @Override
-    public void onListen(Object arguments, EventChannel.EventSink events) {
-        eventSink = events;
-        startReadingData(arguments);
+    public void onListen(Object arguments, EventChannel.EventSink eventSink) {
+        this.eventSink = eventSink;
+        // Trigger event whenever required
+        handleEvent(arguments);
     }
 
     @Override
     public void onCancel(Object arguments) {
-        eventSink = null;
+        this.eventSink = null;
     }
 
-    private static class MethodResultWrapper implements Result {
 
-        private final Result methodResult;
-        private final Handler handler = new Handler(Looper.getMainLooper());
-
-        MethodResultWrapper(Result methodResult) {
-            this.methodResult = methodResult;
-        }
-
-        @Override
-        public void success(final Object result) {
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    methodResult.success(result);
-                }
-            });
-        }
-
-        @Override
-        public void error(final String errorCode, final String errorMessage, final Object errorDetails) {
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    methodResult.error(errorCode, errorMessage, errorDetails);
-                }
-            });
-        }
-
-        @Override
-        public void notImplemented() {
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    methodResult.notImplemented();
-                }
-            });
+    @Override
+    public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
+        if (call.method.equals("startScan")) {
+            scanForScales(call, result);
+        } else {
+            result.notImplemented();
         }
     }
 
-    private void startReadingData(Object arguments) {
+    @Override
+    public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+        methodChannel.setMethodCallHandler(null);
+    }
+
+    private void handleEvent(Object arguments) {
         if (arguments instanceof Map) {
             Map<?, ?> params = (Map<?, ?>) arguments;
             String interfaceType = (String) params.get("INTERFACE_TYPE_KEY");
@@ -214,15 +130,14 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
                 if (mScale != null) {
                     mScale.disconnect();
                 }
-            } 
-            // else if ("tare".equals(action)) {
-            //     if (mScale != null) {
-            //         Map<String, Object> setting = (Map<String, Object>) data.get("scale_update_setting");
-            //         setting.put("status", "LOADING");
-            //         eventSink.success(data);
-            //         mScale.updateSetting(ScaleSetting.ZeroPointAdjustment);
-            //     }
-            // }
+            } else if ("tare".equals(action)) {
+                if (mScale != null) {
+                    Map<String, Object> setting = (Map<String, Object>) data.get("scale_update_setting");
+                    setting.put("status", "LOADING");
+                    eventSink.success(data);
+                    mScale.updateSetting(ScaleSetting.ZeroPointAdjustment);
+                }
+            }
         }
     }
 
@@ -242,11 +157,11 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
             // List<Map<String, String>> responseList = new ArrayList<>();
 
             // Map<String, String> item = new HashMap<>();
-            // item.put("INTERFACE_TYPE_KEY" , "BLE");
-            // item.put("DEVICE_NAME_KEY","Scale-4502-a12");
-            // item.put("IDENTIFIER_KEY","62:00:A1:27:99:FC");
-            // item.put("SCALE_TYPE_KEY","MGTS");
-            // responseList.add(item); 
+            // item.put("INTERFACE_TYPE_KEY", "BLE");
+            // item.put("DEVICE_NAME_KEY", "Scale-4502-a12");
+            // item.put("IDENTIFIER_KEY", "62:00:A1:27:99:FC");
+            // item.put("SCALE_TYPE_KEY", "MGTS");
+            // responseList.add(item);
             // result.success(responseList);
             StarDeviceManager starDeviceManager = new StarDeviceManager(applicationContext, interfaceType);
 
@@ -268,6 +183,7 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
             result.error("PORT_DISCOVERY_ERROR", e.getMessage(), null);
         }
     }
+
 
     private final ScaleCallback mScaleCallback = new ScaleCallback() {
         @Override
@@ -434,4 +350,4 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
         }
 
     };
-}
+} 
