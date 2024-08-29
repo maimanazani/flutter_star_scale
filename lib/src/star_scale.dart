@@ -40,15 +40,15 @@ class StarScale {
   }
 
   void connect(ConnectionInfo info) {
-    sink({...info.toMap(), "ACTION": "connect"});
+    sink({...info.toMap(), "action": "connect"});
   }
 
   void tare() {
-    sink({"ACTION": "tare"});
+    sink({"action": "tare"});
   }
 
   void disconnect() {
-    sink({"ACTION": "disconnect"});
+    sink({"action": "disconnect"});
   }
 
   void dispose() {

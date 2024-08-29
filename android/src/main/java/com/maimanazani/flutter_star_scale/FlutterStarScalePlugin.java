@@ -100,7 +100,7 @@ public class FlutterStarScalePlugin implements FlutterPlugin, MethodCallHandler,
             Map<?, ?> params = (Map<?, ?>) arguments;
             String interfaceType = (String) params.get("INTERFACE_TYPE_KEY");
             String macAddress = (String) params.get("IDENTIFIER_KEY");
-            String action = (String) params.get("ACTION");
+            String action = (String) params.get("action");
 
             if ("connect".equals(action)) {
                 if (macAddress != null && mScale == null) {
